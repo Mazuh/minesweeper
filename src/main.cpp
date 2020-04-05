@@ -8,7 +8,7 @@ const std::string BOMB_STR = "💣";
 
 const std::string UNKNOWN_STR = "❓";
 
-const std::string BLANK_STR = "⬜";
+const std::string BLANK_STR = " -";
 
 const std::string FIELD_HORIZONTAL_WALL_STR = "🧱";
 
@@ -41,6 +41,10 @@ private:
         }
     }
     bool _isBombAt(int x, int y) {
+        if (x < 0 || y < 0 || x >= this->_width || y >= this->_height) {
+            return false;
+        }
+
         for (auto bomb : this->bombs) {
             int bombX, bombY;
             std::tie (bombX, bombY) = bomb;
@@ -50,6 +54,47 @@ private:
         }
 
         return false;
+    }
+    void _handleSafeTouch(int x, int y) {
+        int bombsAroundQtt = 0;
+
+        if (this->_isBombAt(x - 1, y - 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x - 1, y)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x - 1, y + 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x + 1, y - 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x + 1, y)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x + 1, y + 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x, y - 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (this->_isBombAt(x, y + 1)) {
+            bombsAroundQtt++;
+        }
+
+        if (bombsAroundQtt) {
+            this->rows[x][y] = " " + std::to_string(bombsAroundQtt);
+        } else {
+            this->rows[x][y] = BLANK_STR;
+        }
     }
 public:
     Field(int width, int height, int bombsQtt) {
@@ -66,7 +111,7 @@ public:
         if (isBomb) {
             this->rows[x][y] = BOMB_STR;
         } else {
-            this->rows[x][y] = BLANK_STR;
+            this->_handleSafeTouch(x, y);
         }
 
         this->_isBombTouched = isBomb;
@@ -117,7 +162,7 @@ int main() {
             << std::endl;
 
         if (field.isBombTouched()) {
-            std::cout << "🔴 Ops! Triggered a bomb!" << std::endl;
+            std::cout << "🛑 Ops... Triggered a bomb! 💢💢💢" << std::endl;
             break;
         }
 
