@@ -16,30 +16,31 @@ const std::string FIELD_VERTICAL_WALL_STR = "🧱";
 
 class Field {
 private:
-    int width;
-    int height;
-    int bombsQtt;
+    int _width;
+    int _height;
+    int _bombsQtt;
+    bool _isBombTouched = false;
     std::vector<std::vector<std::string>> rows;
     std::vector<std::tuple<int, int>> bombs;
-    void fillEmpty() {
-        for (int iRows = 0; iRows < width; ++iRows) {
+    void _fillEmpty() {
+        for (int iRows = 0; iRows < _width; ++iRows) {
             std::vector<std::string> cols;
-            for (int iCols = 0; iCols < height; ++iCols) {
+            for (int iCols = 0; iCols < _height; ++iCols) {
                 cols.push_back(UNKNOWN_STR);
             }
             this->rows.push_back(cols);
         }
     }
-    void generateBombs() {
-        while ((int) this->bombs.size() < this->bombsQtt) {
-            int randomX = rand() % this->width;
-            int randomY = rand() % this->height;
-            if (!this->isBombAt(randomX, randomY)) {
+    void _generateBombs() {
+        while ((int) this->bombs.size() < this->_bombsQtt) {
+            int randomX = rand() % this->_width;
+            int randomY = rand() % this->_height;
+            if (!this->_isBombAt(randomX, randomY)) {
                 this->bombs.push_back(std::make_tuple(randomX, randomY));
             }
         }
     }
-    bool isBombAt(int x, int y) {
+    bool _isBombAt(int x, int y) {
         for (auto bomb : this->bombs) {
             int bombX, bombY;
             std::tie (bombX, bombY) = bomb;
@@ -52,15 +53,15 @@ private:
     }
 public:
     Field(int width, int height, int bombsQtt) {
-        this->width = width;
-        this->height = height;
-        this->bombsQtt = bombsQtt;
+        this->_width = width;
+        this->_height = height;
+        this->_bombsQtt = bombsQtt;
 
-        this->fillEmpty();
-        this->generateBombs();
+        this->_fillEmpty();
+        this->_generateBombs();
     }
-    bool touchAt(int x, int y) {
-        bool isBomb = this->isBombAt(x, y);
+    void touchAt(int x, int y) {
+        bool isBomb = this->_isBombAt(x, y);
 
         if (isBomb) {
             this->rows[x][y] = BOMB_STR;
@@ -68,12 +69,15 @@ public:
             this->rows[x][y] = BLANK_STR;
         }
 
-        return !isBomb;
+        this->_isBombTouched = isBomb;
+    }
+    bool isBombTouched() {
+        return this->_isBombTouched;
     }
     std::string toString() {
         std::stringstream stringified;
 
-        for (int i = 0; i < this->width + 2; i++) {
+        for (int i = 0; i < this->_width + 2; i++) {
             stringified << FIELD_HORIZONTAL_WALL_STR;
         }
 
@@ -87,7 +91,7 @@ public:
             stringified << FIELD_VERTICAL_WALL_STR << std::endl;
         }
 
-        for (int i = 0; i < this->width + 2; i++) {
+        for (int i = 0; i < this->_width + 2; i++) {
             stringified << FIELD_HORIZONTAL_WALL_STR;
         }
 
@@ -103,11 +107,23 @@ int main() {
 
     while (true) {
         std::system("clear || cls");
-        std::cout << std::endl << "🕵 Minesweeper, the game!" << std::endl << std::endl;
-        std::cout << field.toString() << std::endl;
+
+        std::cout
+            << std::endl
+            << "🕵 Minesweeper (by Mazuh)"
+            << std::endl
+            << std::endl
+            << field.toString()
+            << std::endl;
+
+        if (field.isBombTouched()) {
+            std::cout << "🔴 Ops! Triggered a bomb!" << std::endl;
+            break;
+        }
+
         std::cout << "Select X and Y (separated by spaces): ";
-        std::cin >> x;
-        std::cin >> y;
+        std::cin.clear();
+        std::cin >> x >> y;
         field.touchAt(x, y);
     }
 
