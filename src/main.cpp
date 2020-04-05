@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
+#include <array>
 #include <vector>
 #include <tuple>
 
@@ -41,7 +42,7 @@ private:
         }
     }
     bool _isBombAt(int x, int y) {
-        if (x < 0 || y < 0 || x >= this->_width || y >= this->_height) {
+        if (!this->isValidPosition(x, y)) {
             return false;
         }
 
@@ -58,42 +59,40 @@ private:
     void _handleSafeTouch(int x, int y) {
         int bombsAroundQtt = 0;
 
-        if (this->_isBombAt(x - 1, y - 1)) {
-            bombsAroundQtt++;
-        }
+        std::array<std::tuple<int, int>, 8> surroundings = {
+            std::make_tuple(x - 1, y - 1),
+            std::make_tuple(x - 1, y),
+            std::make_tuple(x - 1, y + 1),
+            std::make_tuple(x + 1, y - 1),
+            std::make_tuple(x + 1, y),
+            std::make_tuple(x + 1, y + 1),
+            std::make_tuple(x, y - 1),
+            std::make_tuple(x, y + 1),
+        };
 
-        if (this->_isBombAt(x - 1, y)) {
-            bombsAroundQtt++;
-        }
+        this->rows[x][y] = BLANK_STR;
 
-        if (this->_isBombAt(x - 1, y + 1)) {
-            bombsAroundQtt++;
-        }
-
-        if (this->_isBombAt(x + 1, y - 1)) {
-            bombsAroundQtt++;
-        }
-
-        if (this->_isBombAt(x + 1, y)) {
-            bombsAroundQtt++;
-        }
-
-        if (this->_isBombAt(x + 1, y + 1)) {
-            bombsAroundQtt++;
-        }
-
-        if (this->_isBombAt(x, y - 1)) {
-            bombsAroundQtt++;
-        }
-
-        if (this->_isBombAt(x, y + 1)) {
-            bombsAroundQtt++;
+        for (auto surrounding : surroundings) {
+            int surroundingX, surroundingY;
+            std::tie (surroundingX, surroundingY) = surrounding;
+            if (this->_isBombAt(surroundingX, surroundingY)) {
+                bombsAroundQtt++;
+                this->rows[x][y] = " " + std::to_string(bombsAroundQtt);
+            }
         }
 
         if (bombsAroundQtt) {
-            this->rows[x][y] = " " + std::to_string(bombsAroundQtt);
-        } else {
-            this->rows[x][y] = BLANK_STR;
+            return;
+        }
+
+        for (auto surrounding : surroundings) {
+            int surroundingX, surroundingY;
+            std::tie (surroundingX, surroundingY) = surrounding;
+            if (this->isValidPosition(surroundingX, surroundingY)
+                && !this->_isBombAt(surroundingX, surroundingY)
+                && this->rows[surroundingX][surroundingY] == UNKNOWN_STR) {
+                this->_handleSafeTouch(surroundingX, surroundingY);
+            }
         }
     }
 public:
@@ -105,7 +104,14 @@ public:
         this->_fillEmpty();
         this->_generateBombs();
     }
+    bool isValidPosition(int x, int y) {
+        return x >= 0 && y >= 0 && x < this->_width && y < this->_height;
+    }
     void touchAt(int x, int y) {
+        if (!this->isValidPosition(x, y)) {
+            return;
+        }
+
         bool isBomb = this->_isBombAt(x, y);
 
         if (isBomb) {
