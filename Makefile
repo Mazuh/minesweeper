@@ -5,8 +5,8 @@ build-n-run: dir build run
 dir:
 	mkdir -p ./build/
 
-build:
-	g++ -Wall -pedantic -ansi -std=c++17 ./src/main.cpp -o ./build/minesweeper.bin
+build: dir
+	g++ -Wall -pedantic -ansi -std=c++17 ./src/*.cpp -o ./build/minesweeper.bin
 
 run:
 	./build/minesweeper.bin
