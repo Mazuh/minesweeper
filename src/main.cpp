@@ -7,7 +7,13 @@
 
 const std::string BOMB_STR = "💣";
 
-const std::string UNKNOWN_STR = "❓";
+const std::string EXPLODING_BOMB_STR = "💢";
+
+const std::string UNKNOWN_STR = "⬜";
+
+const std::string QUESTION_BOMB_FLAG_STR = "❓";
+
+const std::string BOMB_FLAG_STR = "🚩";
 
 const std::string BLANK_STR = " -";
 
@@ -15,7 +21,7 @@ const std::string FIELD_HORIZONTAL_WALL_STR = "🧱";
 
 const std::string FIELD_VERTICAL_WALL_STR = "🧱";
 
-class Field {
+class MineField {
 private:
     int _width;
     int _height;
@@ -23,10 +29,12 @@ private:
     bool _isBombTouched = false;
     std::vector<std::vector<std::string>> _cols;
     std::vector<std::tuple<int, int>> _bombs;
+    std::vector<std::tuple<int, int>> _questionFlags;
+    std::vector<std::tuple<int, int>> _bombFlags;
     void _generateUnknowns() {
-        for (int i = 0; i < this->_height; i++) {
+        for (int y = 0; y < this->_height; y++) {
             std::vector<std::string> cells;
-            for (int j = 0; j < this->_width; j++) {
+            for (int x = 0; x < this->_width; x++) {
                 cells.push_back(UNKNOWN_STR);
             }
             this->_cols.push_back(cells);
@@ -40,9 +48,6 @@ private:
                 this->_bombs.push_back(std::make_tuple(randomX, randomY));
             }
         }
-    }
-    std::string _getAt(int x, int y) {
-        return this->_cols[y][x];
     }
     void _setAt(int x, int y, std::string value) {
         this->_cols[y][x] = value;
@@ -95,14 +100,14 @@ private:
             int surroundingX, surroundingY;
             std::tie (surroundingX, surroundingY) = surrounding;
             if (this->isValidPosition(surroundingX, surroundingY)
-                && !this->_isBombAt(surroundingX, surroundingY)
-                && this->_getAt(surroundingX, surroundingY) == UNKNOWN_STR) {
+                && !this->isRevealed(surroundingX, surroundingY)
+                && !this->_isBombAt(surroundingX, surroundingY)) {
                 this->_handleSafeTouch(surroundingX, surroundingY);
             }
         }
     }
 public:
-    Field(int width, int height, int bombsQtt) {
+    MineField(int width, int height, int bombsQtt) {
         this->_width = width;
         this->_height = height;
         this->_bombsQtt = bombsQtt;
@@ -113,6 +118,24 @@ public:
     bool isValidPosition(int x, int y) {
         return x >= 0 && y >= 0 && x < this->_width && y < this->_height;
     }
+    std::string getAt(int x, int y) {
+        return this->_cols[y][x];
+    }
+    bool isRevealed(int x, int y) {
+        std::string value = this->getAt(x, y);
+        return value != UNKNOWN_STR
+            && value != QUESTION_BOMB_FLAG_STR
+            && value != BOMB_FLAG_STR;
+    }
+    int availableFlags() {
+        return this->_bombsQtt - this->_bombFlags.size();
+    }
+    void addBombFlagAt(int x, int y) {
+        this->_bombFlags.push_back(std::make_tuple(x, y));
+    }
+    void addQuestionFlagAt(int x, int y) {
+        this->_questionFlags.push_back(std::make_tuple(x, y));
+    }
     void touchAt(int x, int y) {
         if (!this->isValidPosition(x, y)) {
             return;
@@ -121,7 +144,7 @@ public:
         bool isBomb = this->_isBombAt(x, y);
 
         if (isBomb) {
-            this->_setAt(x, y, BOMB_STR);
+            this->_setAt(x, y, EXPLODING_BOMB_STR);
         } else {
             this->_handleSafeTouch(x, y);
         }
@@ -130,6 +153,17 @@ public:
     }
     bool isBombTouched() {
         return this->_isBombTouched;
+    }
+    void revealAll() {
+        for (int y = 0; y < this->_height; y++) {
+            for (int x = 0; x < this->_width; x++) {
+                if (this->_isBombAt(x, y) && this->getAt(x, y) != EXPLODING_BOMB_STR) {
+                    this->_setAt(x, y, BOMB_STR);
+                } else if (!this->isRevealed(x, y)) {
+                    this->_handleSafeTouch(x, y);
+                }
+            }
+        }
     }
     std::string toString() {
         std::stringstream stringified;
@@ -160,10 +194,14 @@ public:
 
 int main() {
     int x, y;
-    Field field (16, 9, 20);
+    MineField field (16, 9, 20);
 
     while (true) {
         std::system("clear || cls");
+
+        if (field.isBombTouched()) {
+            field.revealAll();
+        }
 
         std::cout
             << std::endl
@@ -174,7 +212,7 @@ int main() {
             << std::endl;
 
         if (field.isBombTouched()) {
-            std::cout << "🛑 Ops... Triggered a bomb! 💢💢💢" << std::endl;
+            std::cout << "🛑 Ops... Triggered a bomb!" << std::endl;
             break;
         }
 
