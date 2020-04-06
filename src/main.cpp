@@ -21,32 +21,38 @@ private:
     int _height;
     int _bombsQtt;
     bool _isBombTouched = false;
-    std::vector<std::vector<std::string>> rows;
-    std::vector<std::tuple<int, int>> bombs;
-    void _fillEmpty() {
-        for (int iRows = 0; iRows < _width; ++iRows) {
-            std::vector<std::string> cols;
-            for (int iCols = 0; iCols < _height; ++iCols) {
-                cols.push_back(UNKNOWN_STR);
+    std::vector<std::vector<std::string>> _cols;
+    std::vector<std::tuple<int, int>> _bombs;
+    void _generateUnknowns() {
+        for (int i = 0; i < this->_height; i++) {
+            std::vector<std::string> cells;
+            for (int j = 0; j < this->_width; j++) {
+                cells.push_back(UNKNOWN_STR);
             }
-            this->rows.push_back(cols);
+            this->_cols.push_back(cells);
         }
     }
     void _generateBombs() {
-        while ((int) this->bombs.size() < this->_bombsQtt) {
+        while ((int) this->_bombs.size() < this->_bombsQtt) {
             int randomX = rand() % this->_width;
             int randomY = rand() % this->_height;
             if (!this->_isBombAt(randomX, randomY)) {
-                this->bombs.push_back(std::make_tuple(randomX, randomY));
+                this->_bombs.push_back(std::make_tuple(randomX, randomY));
             }
         }
+    }
+    std::string _getAt(int x, int y) {
+        return this->_cols[y][x];
+    }
+    void _setAt(int x, int y, std::string value) {
+        this->_cols[y][x] = value;
     }
     bool _isBombAt(int x, int y) {
         if (!this->isValidPosition(x, y)) {
             return false;
         }
 
-        for (auto bomb : this->bombs) {
+        for (auto bomb : this->_bombs) {
             int bombX, bombY;
             std::tie (bombX, bombY) = bomb;
             if (x == bombX && y == bombY) {
@@ -70,14 +76,14 @@ private:
             std::make_tuple(x, y + 1),
         };
 
-        this->rows[x][y] = BLANK_STR;
+        this->_setAt(x, y, BLANK_STR);
 
         for (auto surrounding : surroundings) {
             int surroundingX, surroundingY;
             std::tie (surroundingX, surroundingY) = surrounding;
             if (this->_isBombAt(surroundingX, surroundingY)) {
                 bombsAroundQtt++;
-                this->rows[x][y] = " " + std::to_string(bombsAroundQtt);
+                this->_setAt(x, y, " " + std::to_string(bombsAroundQtt));
             }
         }
 
@@ -90,7 +96,7 @@ private:
             std::tie (surroundingX, surroundingY) = surrounding;
             if (this->isValidPosition(surroundingX, surroundingY)
                 && !this->_isBombAt(surroundingX, surroundingY)
-                && this->rows[surroundingX][surroundingY] == UNKNOWN_STR) {
+                && this->_getAt(surroundingX, surroundingY) == UNKNOWN_STR) {
                 this->_handleSafeTouch(surroundingX, surroundingY);
             }
         }
@@ -101,7 +107,7 @@ public:
         this->_height = height;
         this->_bombsQtt = bombsQtt;
 
-        this->_fillEmpty();
+        this->_generateUnknowns();
         this->_generateBombs();
     }
     bool isValidPosition(int x, int y) {
@@ -115,7 +121,7 @@ public:
         bool isBomb = this->_isBombAt(x, y);
 
         if (isBomb) {
-            this->rows[x][y] = BOMB_STR;
+            this->_setAt(x, y, BOMB_STR);
         } else {
             this->_handleSafeTouch(x, y);
         }
@@ -134,9 +140,9 @@ public:
 
         stringified << std::endl;
 
-        for (auto cols : this->rows) {
+        for (auto cells : this->_cols) {
             stringified << FIELD_VERTICAL_WALL_STR;
-            for (auto cell : cols) {
+            for (auto cell : cells) {
                 stringified << cell;
             }
             stringified << FIELD_VERTICAL_WALL_STR << std::endl;
@@ -154,7 +160,7 @@ public:
 
 int main() {
     int x, y;
-    Field field (8, 8, 10);
+    Field field (16, 9, 20);
 
     while (true) {
         std::system("clear || cls");
