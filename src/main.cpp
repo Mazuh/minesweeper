@@ -44,15 +44,15 @@ private:
         while ((int) this->_bombs.size() < this->_bombsQtt) {
             int randomX = rand() % this->_width;
             int randomY = rand() % this->_height;
-            if (!this->_isBombAt(randomX, randomY)) {
+            if (!this->_isBomb(randomX, randomY)) {
                 this->_bombs.push_back(std::make_tuple(randomX, randomY));
             }
         }
     }
-    void _setAt(int x, int y, std::string value) {
+    void _setDisplay(int x, int y, std::string value) {
         this->_cols[y][x] = value;
     }
-    bool _isBombAt(int x, int y) {
+    bool _isBomb(int x, int y) {
         if (!this->isValidPosition(x, y)) {
             return false;
         }
@@ -81,14 +81,14 @@ private:
             std::make_tuple(x, y + 1),
         };
 
-        this->_setAt(x, y, BLANK_STR);
+        this->_setDisplay(x, y, BLANK_STR);
 
         for (auto surrounding : surroundings) {
             int surroundingX, surroundingY;
             std::tie (surroundingX, surroundingY) = surrounding;
-            if (this->_isBombAt(surroundingX, surroundingY)) {
+            if (this->_isBomb(surroundingX, surroundingY)) {
                 bombsAroundQtt++;
-                this->_setAt(x, y, " " + std::to_string(bombsAroundQtt));
+                this->_setDisplay(x, y, " " + std::to_string(bombsAroundQtt));
             }
         }
 
@@ -101,7 +101,7 @@ private:
             std::tie (surroundingX, surroundingY) = surrounding;
             if (this->isValidPosition(surroundingX, surroundingY)
                 && !this->isRevealed(surroundingX, surroundingY)
-                && !this->_isBombAt(surroundingX, surroundingY)) {
+                && !this->_isBomb(surroundingX, surroundingY)) {
                 this->_handleSafeTouch(surroundingX, surroundingY);
             }
         }
@@ -118,11 +118,14 @@ public:
     bool isValidPosition(int x, int y) {
         return x >= 0 && y >= 0 && x < this->_width && y < this->_height;
     }
-    std::string getAt(int x, int y) {
+    bool isBombTouched() {
+        return this->_isBombTouched;
+    }
+    std::string getDisplay(int x, int y) {
         return this->_cols[y][x];
     }
     bool isRevealed(int x, int y) {
-        std::string value = this->getAt(x, y);
+        std::string value = this->getDisplay(x, y);
         return value != UNKNOWN_STR
             && value != QUESTION_BOMB_FLAG_STR
             && value != BOMB_FLAG_STR;
@@ -130,35 +133,32 @@ public:
     int availableFlags() {
         return this->_bombsQtt - this->_bombFlags.size();
     }
-    void addBombFlagAt(int x, int y) {
-        this->_bombFlags.push_back(std::make_tuple(x, y));
-    }
-    void addQuestionFlagAt(int x, int y) {
-        this->_questionFlags.push_back(std::make_tuple(x, y));
-    }
-    void touchAt(int x, int y) {
+    // void addBombFlag(int x, int y) {
+    //     this->_bombFlags.push_back(std::make_tuple(x, y));
+    // }
+    // void addQuestionFlag(int x, int y) {
+    //     this->_questionFlags.push_back(std::make_tuple(x, y));
+    // }
+    void touch(int x, int y) {
         if (!this->isValidPosition(x, y)) {
             return;
         }
 
-        bool isBomb = this->_isBombAt(x, y);
+        bool isBomb = this->_isBomb(x, y);
 
         if (isBomb) {
-            this->_setAt(x, y, EXPLODING_BOMB_STR);
+            this->_setDisplay(x, y, EXPLODING_BOMB_STR);
         } else {
             this->_handleSafeTouch(x, y);
         }
 
         this->_isBombTouched = isBomb;
     }
-    bool isBombTouched() {
-        return this->_isBombTouched;
-    }
     void revealAll() {
         for (int y = 0; y < this->_height; y++) {
             for (int x = 0; x < this->_width; x++) {
-                if (this->_isBombAt(x, y) && this->getAt(x, y) != EXPLODING_BOMB_STR) {
-                    this->_setAt(x, y, BOMB_STR);
+                if (this->_isBomb(x, y) && this->getDisplay(x, y) != EXPLODING_BOMB_STR) {
+                    this->_setDisplay(x, y, BOMB_STR);
                 } else if (!this->isRevealed(x, y)) {
                     this->_handleSafeTouch(x, y);
                 }
@@ -219,7 +219,7 @@ int main() {
         std::cout << "Select X and Y (separated by spaces): ";
         std::cin.clear();
         std::cin >> x >> y;
-        field.touchAt(x, y);
+        field.touch(x, y);
     }
 
     return 0;
