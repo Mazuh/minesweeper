@@ -123,6 +123,21 @@ public:
         this->_generateUnknowns();
         this->_generateBombs();
     }
+    bool isAllBombsFlagged() {
+        if (this->getUsedBombFlagsQtt() != this->getBombsQtt()) {
+            return false;
+        }
+
+        for (auto bomb : this->_bombs) {
+            int x, y;
+            std::tie (x, y) = bomb;
+            if (this->getDisplay(x, y) != BOMB_FLAG_STR) {
+                return false;
+            }
+        }
+
+        return true;
+    }
     bool isValidPosition(int x, int y) {
         return x >= 0 && y >= 0 && x < this->_width && y < this->_height;
     }
@@ -256,7 +271,7 @@ int main() {
 
         std::cout
             << std::endl
-            << "🕵 Minesweeper (by Mazuh)"
+            << "🕵 Minesweeper | Source at: https://github.com/Mazuh/minesweeper"
             << std::endl
             << std::endl
             << field.toString()
@@ -264,6 +279,9 @@ int main() {
 
         if (field.isBombTouched()) {
             std::cout << BOMB_STR << " Ops... Triggered a bomb! Game over. 🛑" << std::endl;
+            break;
+        } else if (field.isAllBombsFlagged()) {
+            std::cout << "🥳 Yeeey! All mines properly marked. Nice!" << std::endl;
             break;
         }
 
