@@ -26,11 +26,10 @@ private:
     int _width;
     int _height;
     int _bombsQtt;
+    int _usedBombFlagsQtt = 0;
     bool _isBombTouched = false;
     std::vector<std::vector<std::string>> _cols;
     std::vector<std::tuple<int, int>> _bombs;
-    std::vector<std::tuple<int, int>> _questionFlags;
-    std::vector<std::tuple<int, int>> _bombFlags;
     void _generateUnknowns() {
         for (int y = 0; y < this->_height; y++) {
             std::vector<std::string> cells;
@@ -68,6 +67,8 @@ private:
         return false;
     }
     void _handleSafeTouch(int x, int y) {
+        this->setEmptyFlag(x, y);
+
         int bombsAroundQtt = 0;
 
         std::array<std::tuple<int, int>, 8> surroundings = {
@@ -130,18 +131,50 @@ public:
             && value != QUESTION_BOMB_FLAG_STR
             && value != BOMB_FLAG_STR;
     }
-    int availableFlags() {
-        return this->_bombsQtt - this->_bombFlags.size();
+    bool isAllowedToFlag(int x, int y) {
+        return this->getDisplay(x, y) == UNKNOWN_STR;
     }
-    // void addBombFlag(int x, int y) {
-    //     this->_bombFlags.push_back(std::make_tuple(x, y));
-    // }
-    // void addQuestionFlag(int x, int y) {
-    //     this->_questionFlags.push_back(std::make_tuple(x, y));
-    // }
-    void touch(int x, int y) {
+    int getUsedBombFlagsQtt() {
+        return this->_usedBombFlagsQtt;
+    }
+    int getBombsQtt() {
+        return this->_bombsQtt;
+    }
+    bool setEmptyFlag(int x, int y) {
+        std::string value = this->getDisplay(x, y);
+        if (this->isRevealed(x, y)) {
+            return false;
+        }
+
+        if (value == BOMB_FLAG_STR) {
+            this->_usedBombFlagsQtt--;
+        }
+
+        this->_setDisplay(x, y, UNKNOWN_STR);
+        return true;
+    }
+    bool addQuestionFlag(int x, int y) {
+        if (!this->isValidPosition(x, y) || this->isRevealed(x, y)) {
+            return false;
+        }
+
+        this->setEmptyFlag(x, y);
+        this->_setDisplay(x, y, QUESTION_BOMB_FLAG_STR);
+        return true;
+    }
+    bool addBombFlag(int x, int y) {
+        if (!this->isValidPosition(x, y) || this->isRevealed(x, y)) {
+            return false;
+        }
+
+        this->setEmptyFlag(x, y);
+        this->_setDisplay(x, y, BOMB_FLAG_STR);
+        this->_usedBombFlagsQtt++;
+        return true;
+    }
+    bool touch(int x, int y) {
         if (!this->isValidPosition(x, y)) {
-            return;
+            return false;
         }
 
         bool isBomb = this->_isBomb(x, y);
@@ -153,6 +186,7 @@ public:
         }
 
         this->_isBombTouched = isBomb;
+        return true;
     }
     void revealAll() {
         for (int y = 0; y < this->_height; y++) {
@@ -194,6 +228,8 @@ public:
 
 int main() {
     int x, y;
+    char operation;
+    std::string message = "Let's wait for your first move. Hope you're not nervous.";
     MineField field (16, 9, 20);
 
     while (true) {
@@ -212,14 +248,52 @@ int main() {
             << std::endl;
 
         if (field.isBombTouched()) {
-            std::cout << "🛑 Ops... Triggered a bomb!" << std::endl;
+            std::cout << BOMB_STR << " Ops... Triggered a bomb! Game over. 🛑" << std::endl;
             break;
         }
 
-        std::cout << "Select X and Y (separated by spaces): ";
+        std::cout
+            << message << std::endl
+            << std::endl
+            << "Bomb flags: "
+            << field.getUsedBombFlagsQtt() << "/" << field.getBombsQtt() << std::endl
+            << std::endl
+            << "Separated by spaces, insert two integer coordinates" << std::endl
+            << "for X and Y axis and an operation type (x/?/!/c): ";
         std::cin.clear();
         std::cin >> x >> y;
-        field.touch(x, y);
+        std::cin >> operation;
+
+        if (operation == 'x' || operation == 'X') {
+            if (field.touch(x, y)) {
+                message = "";
+            } else {
+                message = "🚫 Failed to touch that position.";
+            }
+        } else if (operation == 'c' || operation == 'C') {
+            if (field.setEmptyFlag(x, y)) {
+                message = "⚪ Cleared flag in the given position.";
+            } else {
+                message = "🚫 Failed to clear flag in the given position.";
+            }
+        } else if (operation == '?') {
+            if (field.addQuestionFlag(x, y)) {
+                message = QUESTION_BOMB_FLAG_STR + " Placed a question mark.";
+            } else {
+                message = "🚫 Failed to place question mark.";
+            }
+        } else if (operation == '!') {
+            if (field.addBombFlag(x, y)) {
+                message = BOMB_FLAG_STR + " One bomb flag used.";
+            } else {
+                message = "🚫 Failed to use bomb flag.";
+            }
+        } else if (operation == 'q') {
+            field.revealAll();
+            message = "🃏 Secret quit (q) option called. Field fully revealed now.";
+        } else {
+            message = "🚫 Unknowm operation.";
+        }
     }
 
     return 0;
