@@ -10,7 +10,8 @@ int main() {
     int x, y;
     char operation;
     std::string message = "Let's wait for your first move. Hope you're not nervous.";
-    MineField field (16, 9, 15);
+
+    Game::MineField field (16, 9, 15);
 
     while (true) {
         std::system("clear || cls");
@@ -28,7 +29,7 @@ int main() {
             << std::endl;
 
         if (field.isBombTouched()) {
-            std::cout << BOMB_STR << " Ops... Triggered a bomb! Game over. 🛑" << std::endl;
+            std::cout << Game::BOMB_STR << " Ops... Triggered a bomb! Game over. 🛑" << std::endl;
             break;
         } else if (field.isAllBombsFlagged()) {
             std::cout << "🥳 Yeeey! All mines properly marked. Nice!" << std::endl;
@@ -61,13 +62,13 @@ int main() {
             }
         } else if (operation == '?') {
             if (field.addQuestionFlag(x, y)) {
-                message = QUESTION_BOMB_FLAG_STR + " Placed a question mark.";
+                message = Game::QUESTION_BOMB_FLAG_STR + " Placed a question mark.";
             } else {
                 message = "🚫 Failed to place question mark.";
             }
         } else if (operation == '!') {
             if (field.addBombFlag(x, y)) {
-                message = BOMB_FLAG_STR + " One bomb flag used.";
+                message = Game::BOMB_FLAG_STR + " One bomb flag used.";
             } else {
                 message = "🚫 Failed to use bomb flag.";
             }
