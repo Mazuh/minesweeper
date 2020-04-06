@@ -5,21 +5,28 @@
 #include <vector>
 #include <tuple>
 
-const std::string BOMB_STR = "💣";
+const std::string BLANK_OFFSET_STR = "   ";
 
-const std::string EXPLODING_BOMB_STR = "💢";
+const std::string BOMB_STR = " 💣";
 
-const std::string UNKNOWN_STR = "⬜";
+const std::string EXPLODING_BOMB_STR = " 💢";
 
-const std::string QUESTION_BOMB_FLAG_STR = "❓";
+const std::string UNKNOWN_STR = "|⬜";
 
-const std::string BOMB_FLAG_STR = "🚩";
+const std::string QUESTION_BOMB_FLAG_STR = " ❓";
 
-const std::string BLANK_STR = " -";
+const std::string BOMB_FLAG_STR = " 🚩";
 
-const std::string FIELD_HORIZONTAL_WALL_STR = "🧱";
+const std::string BLANK_STR = " - ";
 
-const std::string FIELD_VERTICAL_WALL_STR = "🧱";
+const std::string FIELD_HORIZONTAL_WALL_STR = "|||";
+
+const std::string FIELD_VERTICAL_WALL_STR = "|||";
+const std::string FIELD_LEFT_VERTICAL_WALL_STR = " ||";
+
+std::string numberToDisplay(int n) {
+    return " " + std::to_string(n) + (n < 10 ? " " : "");
+}
 
 class MineField {
 private:
@@ -89,7 +96,7 @@ private:
             std::tie (surroundingX, surroundingY) = surrounding;
             if (this->_isBomb(surroundingX, surroundingY)) {
                 bombsAroundQtt++;
-                this->_setDisplay(x, y, " " + std::to_string(bombsAroundQtt));
+                this->_setDisplay(x, y, numberToDisplay(bombsAroundQtt));
             }
         }
 
@@ -202,24 +209,32 @@ public:
     std::string toString() {
         std::stringstream stringified;
 
-        for (int i = 0; i < this->_width + 2; i++) {
-            stringified << FIELD_HORIZONTAL_WALL_STR;
+        stringified << BLANK_OFFSET_STR << BLANK_OFFSET_STR;
+        for (int i = 0; i < this->_width; i++) {
+            stringified << numberToDisplay(i);
         }
-
         stringified << std::endl;
 
-        for (auto cells : this->_cols) {
-            stringified << FIELD_VERTICAL_WALL_STR;
+        stringified << BLANK_OFFSET_STR << FIELD_LEFT_VERTICAL_WALL_STR;
+        for (int i = 1; i < this->_width + 2; i++) {
+            stringified << FIELD_HORIZONTAL_WALL_STR;
+        }
+        stringified << std::endl;
+
+        for (int i = 0; i < this->_height; i++) {
+            stringified << numberToDisplay(i) << FIELD_LEFT_VERTICAL_WALL_STR;
+
+            auto cells = this->_cols[i];
             for (auto cell : cells) {
                 stringified << cell;
             }
             stringified << FIELD_VERTICAL_WALL_STR << std::endl;
         }
 
-        for (int i = 0; i < this->_width + 2; i++) {
+        stringified << BLANK_OFFSET_STR << FIELD_LEFT_VERTICAL_WALL_STR;
+        for (int i = 1; i < this->_width + 2; i++) {
             stringified << FIELD_HORIZONTAL_WALL_STR;
         }
-
         stringified << std::endl;
 
         return stringified.str();
@@ -230,7 +245,7 @@ int main() {
     int x, y;
     char operation;
     std::string message = "Let's wait for your first move. Hope you're not nervous.";
-    MineField field (16, 9, 20);
+    MineField field (16, 9, 15);
 
     while (true) {
         std::system("clear || cls");
@@ -266,7 +281,7 @@ int main() {
 
         if (operation == 'x' || operation == 'X') {
             if (field.touch(x, y)) {
-                message = "";
+                message = "...";
             } else {
                 message = "🚫 Failed to touch that position.";
             }
