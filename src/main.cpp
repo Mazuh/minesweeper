@@ -305,7 +305,7 @@ int main() {
             }
         } else if (operation == 'q') {
             field.revealAll();
-            message = "🃏 Secret quit (q) option called. Field fully revealed now.";
+            message = "🃏 Secret quit (q) option called. Field revealed. Use Ctrl+C to cancel.";
         } else {
             message = "🚫 Unknowm operation.";
         }
