@@ -1,12 +1,12 @@
 .PHONY: build-n-run dir build run clean
 
-build-n-run: build run
+build-n-run: dir build run
 
 dir:
-	mkdir ./build/
+	mkdir -p ./build/
 
 build:
-	g++ -Wall -pedantic -ansi -std=c++17 -lm ./src/main.cpp -o ./build/minesweeper.bin
+	g++ -Wall -pedantic -ansi -std=c++17 ./src/main.cpp -o ./build/minesweeper.bin
 
 run:
 	./build/minesweeper.bin
