@@ -3,11 +3,19 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include "constants.cpp"
 #include "minefield.cpp"
 
+bool is_number(const std::string& s)
+{
+    return std::find_if(s.begin(), s.end(),
+        [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
 int main() {
     srand(time(NULL));
+    std::string input_x, input_y;
     int x, y;
     char operation;
     std::string message = "Let's wait for your first move. Hope you're not nervous.";
@@ -46,8 +54,16 @@ int main() {
             << "Separated by spaces, insert two integer coordinates" << std::endl
             << "for X and Y axis and an operation type (x/?/!/c): ";
         std::cin.clear();
-        std::cin >> x >> y;
+        std::cin >> input_x >> input_y;
         std::cin >> operation;
+
+        if (!is_number(input_x) || !is_number(input_y)) {
+            message = "🚫 Coordinate inputs should be integer numbers.";
+            continue;
+        }
+
+        x = std::stoi(input_x);
+        y = std::stoi(input_y);
 
         if (operation == 'x' || operation == 'X') {
             if (field.touch(x, y)) {
