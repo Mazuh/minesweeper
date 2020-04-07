@@ -7,6 +7,7 @@
 #include "minefield.cpp"
 
 int main() {
+    srand(time(NULL));
     int x, y;
     char operation;
     std::string message = "Let's wait for your first move. Hope you're not nervous.";
