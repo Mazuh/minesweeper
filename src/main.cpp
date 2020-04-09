@@ -14,6 +14,7 @@ bool is_number(const std::string& s)
 }
 
 int main() {
+    srand(time(NULL));
     std::string input_x, input_y;
     int x, y;
     char operation;
