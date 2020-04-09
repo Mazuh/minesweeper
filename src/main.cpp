@@ -13,14 +13,25 @@ bool is_number(const std::string& s)
         [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+
+    if (argc != 4) {
+        std::cout << "Please, give correct number of arguments.";
+        return 0;
+    }
+
+    int COLUMNS, ROWS, MINES;
+    COLUMNS = std::stoi(argv[1]);
+    ROWS = std::stoi(argv[2]);
+    MINES = std::stoi(argv[3]);
+
     srand(time(NULL));
     std::string input_x, input_y;
     int x, y;
     char operation;
     std::string message = "Let's wait for your first move. Hope you're not nervous.";
 
-    Game::MineField field (16, 9, 15);
+    Game::MineField field (COLUMNS, ROWS, MINES);
 
     while (true) {
         std::system("clear || cls");

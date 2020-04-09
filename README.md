@@ -28,6 +28,16 @@ Having `g++` with C++ 17 support, just run this inside the cloned repository:
 make
 ```
 
+## Customize game
+
+You can choose the number of rows and columns on the board and the number of mines.
+
+For this, use the columns, rows and mines optional variables when run make:
+
+```sh
+make columns=10 rows=4 mines=8
+```
+
 That's it. Compiled using my Pop!_OS. I have no idea of how to run it in other environments.
 
 ## Disclaimer
